@@ -55,7 +55,7 @@ You need Python 3.10+ and [Ollama](https://ollama.com). Everything runs locally;
 **1. Get the code and install**
 
 ```bash
-git clone <this repo>
+git clone https://github.com/Karan1223k/AgentBlame.git
 cd AgentBlame
 python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
