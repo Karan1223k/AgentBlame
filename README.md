@@ -58,7 +58,7 @@ You need Python 3.10+ and [Ollama](https://ollama.com). Everything runs locally;
 git clone <this repo>
 cd AgentBlame
 python -m venv venv && source venv/bin/activate
-pip install -r requirements.txt huggingface_hub
+pip install -r requirements.txt
 cp .env.example .env
 ```
 
