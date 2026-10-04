@@ -1,0 +1,60 @@
+You are an expert log analyst and causal reasoning assistant.
+Your task is to analyze the following multi-agent interaction log file (`EVENT_LOG`) and perform mistake event marking:
+**Mistake Event Marking (`mistake_even_mark`)**: Identify potential mistake events within the extracted events and provide a detailed reason for each.
+
+Input:
+EVENT_LOG: `{event_log}`
+
+### Mistake Event Marking Instructions (`mistake_even_mark`)
+1.  For each event identified in `event_log`, determine if it represents a potential mistake based on the criteria below.
+2.  A "potential mistake event" is an atomic action or statement that could be the root cause of a task failure.
+3.  For each potential mistake event, record its `event_id` and a detailed `mistake_reason`.
+
+### Criteria for a "Potential Mistake Event":
+1.  **Data Input Error**: An agent provides incorrect, outdated, or fabricated information as a core part of its output.
+2.  **Faulty Assumption or Shortcut**: An agent fails to handle an obstacle (e.g., API call failure, file not found error) and makes an unreasonable assumption or uses placeholder data.
+3.  **Core Function Execution Failure**: An agent reports a technical error or explicitly states a failure to perform its designated function (e.g., a "WebSurfer" failing to load a page, a "FileSurfer" unable to access a file).
+4.  **Unproductive Loop or Action**: An agent enters a repeating cycle of unproductive actions or makes an irrelevant action that doesn't advance the task.
+5.  **Others**: Other probable mistakes that may cause the system task failure.
+
+### Output Schema:
+-   The output must be a single JSON object. Return ONLY valid JSON. Escape all quotes inside strings.
+-   The structure must be **exactly** as specified below.
+-   The expected output should only include entries for events identified as mistakes. There must be more than one mistake_event.
+-   Use `event_id` (format: `event_<step_id>_1`) as the key for the expected output.
+```json
+{{
+  "event_<step_id>_1": "the reason why the event is identified to be mistake",
+  "event_<step_id>_1": "another mistake event and here is the reason why the event is identified to be mistake"
+}}
+````
+
+### Example:
+EVENT_LOG:
+{{
+  "0": {{
+    "agent_name": "WebSurfer",
+    "event_dict": {{
+      "event_0_1": "I will search for the martial arts classes near New York Stock Exchange.",
+    }}
+  }},
+  "1": {{
+    "agent_name": "ComputerTerminal",
+    "event_dict": {{
+      "event_1_1": "exitcode: 0 (execution succeeded)",
+    }}
+  }},
+  "2": {{
+    "agent_name": "WebSurfer",
+    "event_dict": {{
+      "event_2_1": "I encountered a BadRequestError while trying to search.",
+    }}
+  }}
+}}
+
+Expected Output JSON:
+```json
+{{
+  "event_2_1": "The event is identified as a mistake because the agent encountered a `BadRequestError`, which signifies a technical failure in the search action. This error indicates a problem with the request itself, preventing the task from being successfully completed as intended."
+}}
+```

@@ -1,0 +1,21 @@
+You are given a partially corrected interaction log, a question, and the identified root cause event that originally led to task failure. Only the root cause event and its directly related effect events have been corrected; other events may still contain errors.
+
+Your task: Use the corrected root cause event and its directly affected events to infer how the rest of the interaction log should have occurred, and derive the correct final answer.
+
+Input:
+Question: {QUESTION}
+Corrected Log: {MODIFIED_LOG}
+Root Cause Event: {ROOT_CAUSE_EVENT}
+
+Instructions:
+1.Identify the root cause event and its directly corrected effect events.
+2.Based on these corrections, reconstruct the correct sequence of downstream events and interactions, correcting any dependent errors in the log.
+3.Derive the correct final answer to the question from the fully corrected event sequence.
+4.Provide a concise explanation of how the root cause event led to the original incorrect answer and how your corrections resolve it.
+5.Output ONLY a JSON object with the fields "reason" and "answer". Do not include any extra text.
+
+Output format:
+{{
+  "reason": "<Explanation of why the root cause event caused the original error and how it is corrected>",
+  "answer": "<Correct final answer to the question based on the fully corrected event sequence>"
+}}

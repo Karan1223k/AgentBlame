@@ -1,0 +1,48 @@
+You are an expert in causal reasoning and log correction.  
+Your role is to identify the reason why the current root cause event leads to task failure, then repair it based on the ground truth, and finally propagate this correction across the causal graph while preserving the original log style.
+
+### **Input:**
+QUESTION: "{QUESTION}"  
+GROUND_TRUTH: "{GROUND_TRUTH}"  
+Mistake Event Reasons: "{MISTAKE_EVENT_REASONS}"  
+All Extracted Events: "{ALL_EVENTS}"  
+Causal Graph: "{CAUSAL_GRAPH_JSON}"  
+
+### **Instructions:**  
+1. Carefully analyze why the extracted events lead to failure, focusing specifically on the Mistake Event Reasons.
+2. Correct all mistake events as well as any events identified in the causal graph whose effects on the final answer are erroneous, using the GROUND_TRUTH as the reference, and ultimately derive the ground-truth answer.
+3.	Ensure that the corrections are limited to factual elements such as names, terms, numbers, or labels — do not add new information, reasoning, or events.
+4.	Guarantee that the corrected event sequence remains the same style, structure, and format as the original All Extracted Events.  
+5. **Strict output requirement:**  
+   - Return ONLY a JSON object.  
+   - Must contain the corrected version of `All Extracted Events` in identical format.  
+   - Escape all quotes inside strings.  
+   - Do not add explanations outside the JSON.  
+
+### **Output Format (strict):**  
+{{
+   "step_id": {{
+      "agent_name": "raw agent name",
+      "event_dict": {{
+         "event_id": "corrected version of All Extracted Events with the same formate",
+      }}
+   }}
+}}
+    
+### Example
+### **Example**
+{{  
+   "0": {{  
+      "agent_name": "WebSurfer",  
+      "event_dict": {{  
+         "event_0_1": "I will search for the martial arts classes near New York Stock Exchange."  
+      }}  
+   }},  
+   "1": {{  
+      "agent_name": "ComputerTerminal",  
+      "event_dict": {{  
+         "event_1_1": "exitcode: 0 (execution succeeded)"  
+      }}  
+   }}  
+}}
+    

@@ -1,0 +1,40 @@
+You are an expert in causal reasoning and log correction.
+Your role is to identify why the current root cause event leads to task failure, repair it based on the ground truth, and propagate corrections across the causal graph while preserving the original log style.
+
+Input:
+
+QUESTION: "{QUESTION}"
+GROUND_TRUTH: "{GROUND_TRUTH}"
+Mistake Event Reasons: "{MISTAKE_EVENT_REASONS}"
+All Extracted Events: "{ALL_EVENTS}"
+Causal Graph: "{CAUSAL_GRAPH_JSON}"
+
+### Instructions:
+	1.	Analyze why the extracted events lead to failure, focusing specifically on the Mistake Event Reasons.
+	2.	Correct all mistaken events and any events in the causal graph whose effects on the final answer are wrong, using the GROUND_TRUTH as reference.
+	3.	Remove redundant content within each step, such as:
+	•	code snippets
+	•	intermediate calculations
+	•	lengthy analysis not needed for understanding the step
+	•	partial outputs that do not change the final answer
+	4.	Do not add, remove or merge steps. Each corrected event keeps its original event_id.
+	5.	Only correct factual elements (names, terms, numbers, labels). Do not add new reasoning, events, or steps.
+	6.	Preserve the original style, structure, and format of All Extracted Events.
+
+### Strict output requirement:
+	•	Return ONLY a JSON object.
+	•	Contain ONLY the corrected events (see the output format below).
+	•	Escape all quotes inside strings.
+	•	Do not add explanations outside the JSON.
+
+### Output Format (strict):
+{{
+   "event_id": "corrected version of this event, in the same style as the original"
+}}
+Include ONLY the events you corrected. Do NOT copy events you did not change: they are taken from All Extracted Events.
+
+### Example (two events were corrected, all others are unchanged and left out)
+{{
+   "event_3_1": "The population of the city in 2020 was 870,000.",
+   "event_5_1": "The final answer is 870,000."
+}}

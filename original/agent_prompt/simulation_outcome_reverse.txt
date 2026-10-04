@@ -1,0 +1,23 @@
+You are given a corrected interaction log, a question, and the identified root cause event that originally led to task failure.
+
+Your task is to infer how the root cause event would have affected the task outcome if it had not been corrected, and simulate the corresponding incorrect final answer.
+
+Input:
+Question: {QUESTION}
+Corrected Log: {MODIFIED_LOG}
+Root Cause Event: {ROOT_CAUSE_EVENT}
+
+Instructions:
+- Identify the root cause event. This event contains an error that originally led to task failure, but the subsequent log has been corrected.
+- **Completely ignore the corrected parts of the log, including any correct intermediate steps or final answers.** They should not influence your inference.
+- Analyze how this erroneous root cause event would have influenced the downstream event sequence and the final task result.
+- Based on this, predict the likely failure outcome and simulate the final answer to the question as if the root cause error had not been corrected.
+- Provide a concise explanation of why the root cause event leads to this failure.
+- Output ONLY a valid JSON object with the fields "reason" and "answer".
+- Do NOT include any additional explanations or text outside the JSON.
+
+Output format:
+{{
+  "reason": <Brief explanation of why the root cause event leads to failure>,
+  "answer": <Simulated final answer to the question based on the root cause event>
+}}

@@ -1,0 +1,145 @@
+You are an AI assistant specialized in multi-agent reasoning analysis. 
+Your task is to perform a precise failure attribution by analyzing a set of events containing some **potential mistake events** and a corresponding causal graph. 
+Your goal is to identify the single, most fundamental root cause that is directly responsible for the system's final failure.
+
+### **Input:**
+  * **QUESTION**: `{QUESTION}`
+  * **Ground Truth**: `{GROUND_TRUTH}`
+  * **All Events JSON**: `{ALL_EVENTS_JSON}`
+  * **Mistake Events Reasons**: `{MISTAKE_EVENTS_REASONS_JSON}`
+  * **Causal Graph JSON**: `{CAUSAL_GRAPH_JSON}`
+-----
+
+### **Instructions:**
+1.  **Identify the Mistake Agent**: First, analyze the `All Events JSON` and `Mistake Events Reasons` to identify the specific agent responsible for the failure. The Mistake Agent is the one whose actions initiated the incorrect causal chain or made the most critical error leading to the wrong solution. Directly output the name of this agent.
+2.  **Identify the Obvious Mistakes**: Begin by analyzing the `Mistake Events Reasons` to locate all **obvious mistakes** of the mistake agent. These are errors that are immediately clear from the log, such as an API call failure, a technical error message, or a clearly incorrect final answer.
+3.  **Determine the Causal Path to Failure**: Using the `Causal Graph JSON`, trace the path of these obvious mistakes to the final output of the system. Your goal is to confirm which obvious mistakes are on the causal chain that leads to the final incorrect answer (verified against the `Ground Truth`). Note that some mistakes may be isolated or get corrected later, and thus are not the cause of the final failure.
+4.  **Pinpoint the True Root Cause**: For the identified causal chain, pinpoint the **true root cause** of the system failure. This event is not necessarily the first or the most obvious one. It is the single, decisive event that ultimately determined the system's incorrect final outcome. This could be:
+      * **An upstream, non-obvious error**: For example, a flawed assumption, fabricated data, or an inappropriate tool selection that led to an obvious downstream error.
+      * **A downstream, decisive error**: For example, a flawed calculation or an incorrect final decision based on otherwise correct data, which directly caused the failure.
+5.  **Provide Detailed Reasoning**: Formulate a concise and accurate `reason` for your choice. The reason must clearly state your inference process, including:
+      * What was the **obvious mistake** you first identified?
+      * Why was this obvious mistake not the true root cause?
+      * What is the **true root cause** you ultimately pinpointed, and how was it inferred from the causal chain?
+-----
+
+### **Output Schema:** Return ONLY valid JSON. Escape all quotes inside strings.
+```json
+{{
+  "log_answer": "<string, the final incorrect answer from the log>",
+  "root_cause_event": "<string, the event ID of the true root cause>",
+  "event_step": "<string, the step ID where the fundamental mistake event occurred>",
+  "reason": "<string, explanation of why this event is the true root cause>"
+}}
+```
+
+### **Example:**
+QUESTION: "Find the 2019 British Academy Games Awards winner and its Wikipedia page revision count before its release month."
+Ground Truth: "60"
+
+All Events JSON:
+```json
+{{
+  "1": {{
+    "agent_name": "Gaming_Awards_Expert",
+    "event_dict": {{
+      "event_1_1": "Agent provided the incorrect game winner for 2019, stating 'God of War' instead of the correct 2018 game winner."
+    }}
+  }},
+  "2": {{
+    "agent_name": "DataVerification_Expert",
+    "event_dict": {{
+      "event_2_1": "Agent correctly identifies the Wikipedia page for 'God of War'."
+    }}
+  }},
+  "3": {{
+    "agent_name": "DataVerification_Expert",
+    "event_dict": {{
+      "event_3_1": "Agent correctly identifies the release date of 'God of War' as April 20, 2018."
+    }}
+  }},
+  "4": {{
+    "agent_name": "DataVerification_Expert",
+    "event_dict": {{
+      "event_4_1": "Agent wrote incorrect code to count revisions, resulting in a count of 0, which is highly improbable."
+    }}
+  }},
+  "5": {{
+    "agent_name": "DataVerification_Expert",
+    "event_dict": {{
+      "event_5_1": "Agent provided the final incorrect answer of 610."
+    }}
+  }}
+}}
+```
+
+Causal Graph JSON of All Events:
+```json
+{{
+  "1": {{
+    "event_dict": {{
+      "event_1_1": {{
+        "cause": [],
+        "effect": ["event_2_1"]
+      }}
+    }}
+  }},
+  "2": {{
+    "event_dict": {{
+      "event_2_1": {{
+        "cause": ["event_1_1"],
+        "effect": ["event_3_1"]
+      }}
+    }}
+  }},
+  "3": {{
+    "event_dict": {{
+      "event_3_1": {{
+        "cause": ["event_2_1"],
+        "effect": ["event_4_1"]
+      }}
+    }}
+  }},
+  "4": {{
+    "event_dict": {{
+      "event_4_1": {{
+        "cause": ["event_3_1"],
+        "effect": ["event_5_1"]
+      }}
+    }}
+  }},
+  "5": {{
+    "event_dict": {{
+      "event_5_1": {{
+        "cause": ["event_4_1"],
+        "effect": []
+      }}
+    }}
+  }}
+}}
+```
+
+Mistake Events Reasons:
+```json
+{{
+  "event_1_1": "Agent provided the incorrect game winner for 2019, stating 'God of War' instead of the correct 2018 game winner.",
+  "event_4_1": "Agent wrote incorrect code to count revisions, resulting in a count of 0, which is highly improbable.",
+  "event_5_1": "Agent provided the final incorrect answer of 610."
+}}
+```
+
+**Analysis**:
+  * **Obvious Mistakes**: `event_1_1` (provided wrong game winner), `event_2_1` (code execution error, resulted in an improbable 0), `event_5_1` (final incorrect answer `610`).
+  * **Causal Path**: `event_1_1` -> `event_2_1` -> `event_3_1` -> `event_4_1` -> `event_5_1`. All events are on the path to failure.
+  * **True Root Cause**: `event_1_1`. While `event_2_1` is a clear technical error and a symptom of failure, the fundamental reason for the entire chain is the initial provision of incorrect data by `Gaming_Awards_Expert` in `event_1_1`. This original data error made it impossible for any subsequent step to succeed, regardless of whether the code was correct or not.
+
+
+Expected Output JSON:
+```json
+{{
+  "log_answer": "610",
+  "root_cause_event": "event_1_1",
+  "event_step": "1",
+  "reason": "Based on the Mistake Events, the obvious mistakes are an incorrect game winner provided in event_1_1 and a code execution error in event_4_1, both leading to the final incorrect answer in event_5_1. By analyzing the causal graph, event_1_1 is identified as the true root cause. Although the code error in event_4_1 is a clear symptom, the fundamental reason for the entire failure chain is the initial provision of incorrect data by the Gaming_Awards_Expert in event_1_1. This initial data error made it impossible for any subsequent step to succeed, regardless of whether the code was correct or not."
+}}
+```

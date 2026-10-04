@@ -1,0 +1,54 @@
+You are an expert in causal reasoning and log correction.
+Your role is to identify why the current root cause event leads to task failure, repair it based on the ground truth, and propagate corrections across the causal graph while preserving the original log style.
+
+Input:
+
+QUESTION: "{QUESTION}"
+GROUND_TRUTH: "{GROUND_TRUTH}"
+Mistake Event Reasons: "{MISTAKE_EVENT_REASONS}"
+All Extracted Events: "{ALL_EVENTS}"
+Causal Graph: "{CAUSAL_GRAPH_JSON}"
+
+### Instructions:
+	1.	Analyze why the extracted events lead to failure, focusing specifically on the Mistake Event Reasons.
+	2.	Correct all mistaken events and any events in the causal graph whose effects on the final answer are wrong, using the GROUND_TRUTH as reference.
+	3.	Remove redundant content within each step, such as:
+	•	code snippets
+	•	intermediate calculations
+	•	lengthy analysis not needed for understanding the step
+	•	partial outputs that do not change the final answer
+	4.	Keep step count unchanged. Each step must correspond 1:1 to the original All Extracted Events.
+	5.	Only correct factual elements (names, terms, numbers, labels). Do not add new reasoning, events, or steps.
+	6.	Preserve the original style, structure, and format of All Extracted Events.
+
+### Strict output requirement:
+	•	Return ONLY a JSON object.
+	•	Contain the corrected All Extracted Events in the identical format.
+	•	Escape all quotes inside strings.
+	•	Do not add explanations outside the JSON.
+
+### Output Format (strict):
+{{
+   "step_id": {{
+      "agent_name": "raw agent name",
+      "event_dict": {{
+         "event_id": "corrected version of All Extracted Events, with redundant content removed but format preserved"
+      }}
+   }}
+}}
+
+###  Example:
+{{
+   "0": {{
+      "agent_name": "WebSurfer",
+      "event_dict": {{
+         "event_0_1": "I will search for the martial arts classes near New York Stock Exchange."
+      }}
+   }},
+   "1": {{
+      "agent_name": "ComputerTerminal",
+      "event_dict": {{
+         "event_1_1": "exitcode: 0 (execution succeeded)"
+      }}
+   }}
+}}

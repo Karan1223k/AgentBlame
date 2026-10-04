@@ -1,0 +1,108 @@
+You are a causal inference assistant.
+Your task is to analyze a list of **all events** from a multi-agent process and construct a comprehensive **causal graph**. The primary focus is to identify and highlight the causal relationships **between all events**, with a special emphasis on how **mistake events** are caused by or lead to **other events** (including both other mistake events and normal events).
+
+Input:
+All Events JSON: `{ALL_EVENT_JSON}`
+Mistake Events Reasons: `{MISTAKE_EVENTS_REASONS_JSON}`
+
+### Instructions:
+Step 1: Parse and Categorize Events
+* Receive the `All Events JSON` and the `Mistake Events Reasons JSON`.
+* Identify all events as either **"mistake"** or **"normal"** based on the provided `Mistake Events Reasons`. If an event is not listed in the reasons, classify it as "normal".
+Step 2: Apply Causal Evaluation Criteria
+* For each potential causal link (`e_i` -> `e_j`), apply the following criteria to determine if a causal edge exists:
+    1.  **Temporality**: `e_i` must occur before `e_j`.
+    2.  **Precondition**: Is `e_i` a necessary prerequisite for `e_j` to happen? Without `e_i`, would `e_j` have been unlikely to occur in the same way?
+    3.  **Influence/Effect**: Does the content or outcome of `e_i` directly affect the content, outcome, or initiation of `e_j`? Is there a clear logical or functional connection?
+* A causal edge should be drawn only if there is a strong, justifiable link based on these criteria.
+* Emphaze your focus on these three causal link types:
+    1.  **Mistake -> Mistake**: How one mistake event leads to another.
+    2.  **Normal -> Mistake**: How a series of normal actions or a specific normal event serves as a precondition or direct cause of a later mistake event.
+    3.  **Mistake -> Normal**: How a mistake event influences subsequent normal events, potentially causing a deviation from the expected process or leading to an incomplete or incorrect result.
+Step 3: Identify Intra-Agent Causality
+  * Within each `step_id`, check every ordered pair of **events** (`e_i`, `e_j`) where `i` < `j` from the same agent.
+  * Evaluate whether `e_i` is a direct cause of `e_j`.
+Step 4: Identify Inter-Agent Causality
+  * For each **event** in the current `step_id`, consider all **events** from previous steps (`step_id - 1`, `step_id - 2`, …), possibly across different agents.
+  * Decide whether earlier mistake events causally influence the current mistake event.
+
+Step 4: Output Format
+-   The output must be **a single JSON object**. Return ONLY valid JSON. 
+-   **Escape all quotes inside strings.**
+-   Do not output explanations. 
+-   Return JSON only, in the format:
+```json
+{{
+  "step_id": {{
+    "event_dict": {{
+      "event_<step_id>_1": {{
+        "cause": ["event_X", "event_Y"],
+        "effect": ["event_Z"]
+      }},
+      "event_<step_id>_2": {{
+        "cause": ["event_A"],
+        "effect": ["event_B", "event_C"]
+      }}
+    }}
+  }}
+}}
+```
+
+### Example
+**Input All Events:**
+```json
+{{
+  "1": {{
+    "agent_name": "Gaming_Awards_Expert",
+    "event_dict": {{
+      "event_1_1": "Agent provided the incorrect game winner for 2019, stating 'God of War' instead of the correct 2018 game winner.",
+      "event_1_2": "Agent successfully performed a web search for 'Game of the Year 2018'."
+    }}
+  }},
+  "2": {{
+    "agent_name": "DataVerification_Expert",
+    "event_dict": {{
+      "event_2_1": "Agent wrote incorrect code to count revisions, resulting in a count of 0, which is highly improbable.",
+      "event_2_2": "Agent reports completing the verification task."
+    }}
+  }}
+}}
+```
+
+**Input Mistake Events Reasons:** 
+```json
+{{
+  "event_1_1": "The event is a mistake because the agent provided factually incorrect information. 'God of War' won the Game of the Year award in 2018, not 2019, and the agent's statement is a verifiable factual error.",
+  "event_2_1": "The event is a mistake because the outcome of the action is illogical and highly improbable. A count of zero for revisions is not a plausible result for the task, which suggests a logical error or flaw in the code written by the agent."
+}}
+```
+
+**Output Causal Graph:**
+```json
+{{
+  "1": {{
+    "event_dict": {{
+      "event_1_1": {{
+        "cause": [],
+        "effect": ["event_1_2", "event_2_1"]
+      }},
+      "event_1_2": {{
+        "cause": ["event_1_1"],
+        "effect": ["event_1_2"]
+      }}
+    }}
+  }},
+  "2": {{
+    "event_dict": {{
+      "event_2_1": {{
+        "cause": ["event_1_1", "event_1_2"],
+        "effect": ["event_2_2"]
+      }},
+      "event_2_2": {{
+        "cause": ["event_2_1"],
+        "effect": []
+      }}
+    }}
+  }}
+}}
+```

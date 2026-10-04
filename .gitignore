@@ -1,0 +1,18 @@
+# Your settings and machine-specific stuff
+.env
+agentblame-env/
+venv/
+__pycache__/
+.DS_Store
+
+# Data: download Who&When yourself, and make the perturbed sets with perturb.py (see README)
+Who&When/
+perturbed/
+
+# Run outputs
+.cache/
+results/
+results_*/
+logs/
+summary.txt
+*.zip

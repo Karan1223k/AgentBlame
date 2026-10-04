@@ -1,0 +1,84 @@
+You are an AI assistant specialized in multi-agent reasoning analysis. 
+Your task is to perform a precise failure attribution by analyzing a set of events containing some **potential mistake events** and the reasons of their mistake analysis. 
+Your goal is to identify the single, most fundamental root cause that is directly responsible for the system's final failure.
+
+### **Input:**
+  * **QUESTION**: `{QUESTION}`
+  * **Ground Truth**: `{GROUND_TRUTH}`
+  * **Causal Events JSON**: `{CAUSAL_EVENTS_JSON}`
+  * **Mistake Events Reasons**: `{MISTAKE_EVENTS_REASONS_JSON}`
+-----
+
+### **Instructions:**
+1.  **Identify the Mistake Agent**: Begin by examining all entries in Mistake Events Reasons. Identify what each mistake represents (e.g., wrong assumption, calculation error, data fabrication, tool misuse, etc.) and how it contributed to the failure. This step is not just about listing mistakes—it’s about understanding their roles in the causal chain.
+2.  **Pinpoint the True Root Cause**: Among all the identified mistake events, find the single event that is causally decisive for the final incorrect outcome. This could be:
+      * **An upstream, non-obvious error**: For example, a flawed assumption, fabricated data, or an inappropriate tool selection that led to an obvious downstream error.
+      * **A downstream, decisive error**: For example, a flawed calculation or an incorrect final decision based on otherwise correct data, which directly caused the failure.
+3.  **Provide Detailed Reasoning**: Formulate a concise and accurate `reason` for your choice. The reason must clearly state your inference process, including:
+      * What is the **true root cause** you ultimately pinpointed, and how was it inferred from the causal chain?
+-----
+
+### **Output Schema:** Return ONLY valid JSON. Escape all quotes inside strings.
+```json
+{{
+  "root_cause_event": "<string, the event ID of the true root cause>",
+  "reason": "<string, explanation of why this event is the true root cause>"
+}}
+```
+
+### **Example:**
+QUESTION: "Find the 2019 British Academy Games Awards winner and its Wikipedia page revision count before its release month."
+Ground Truth: "60"
+
+Causal Events JSON:
+```json
+{{
+  "1": {{
+    "agent_name": "Gaming_Awards_Expert",
+    "event_dict": {{
+      "event_1_1": "Agent provided the incorrect game winner for 2019, stating 'God of War' instead of the correct 2018 game winner."
+    }}
+  }},
+  "2": {{
+    "agent_name": "DataVerification_Expert",
+    "event_dict": {{
+      "event_2_1": "Agent correctly identifies the Wikipedia page for 'God of War'."
+    }}
+  }},
+  "3": {{
+    "agent_name": "DataVerification_Expert",
+    "event_dict": {{
+      "event_3_1": "Agent correctly identifies the release date of 'God of War' as April 20, 2018."
+    }}
+  }},
+  "4": {{
+    "agent_name": "DataVerification_Expert",
+    "event_dict": {{
+      "event_4_1": "Agent wrote incorrect code to count revisions, resulting in a count of 0, which is highly improbable."
+    }}
+  }},
+  "5": {{
+    "agent_name": "DataVerification_Expert",
+    "event_dict": {{
+      "event_5_1": "Agent provided the final incorrect answer of 610."
+    }}
+  }}
+}}
+```
+
+Mistake Events Reasons:
+```json
+{{
+  "event_1_1": "Agent provided the incorrect game winner for 2019, stating 'God of War' instead of the correct 2018 game winner.",
+  "event_4_1": "Agent wrote incorrect code to count revisions, resulting in a count of 0, which is highly improbable.",
+  "event_5_1": "Agent provided the final incorrect answer of 610."
+}}
+```
+
+Expected Output JSON:
+```json
+{{
+  "root_cause_event": "event_1_1",
+  "reason": "Based on the Mistake Events, the obvious mistakes are an incorrect game winner provided in event_1_1 and a code execution error in event_4_1, both leading to the final incorrect answer in event_5_1. By analyzing the causal graph, event_1_1 is identified as the true root cause. Although the code error in event_4_1 is a clear symptom, the fundamental reason for the entire failure chain is the initial provision of incorrect data by the Gaming_Awards_Expert in event_1_1. This initial data error made it impossible for any subsequent step to succeed, regardless of whether the code was correct or not."
+}}
+```
